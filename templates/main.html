@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+
+        <!-- Title of the page-->
+        <title>Wan Emulation Front End</title>
+
+        <!-- Bootstrap and Favicon -->
+        <link href="{{ url_for('static', filename='favicon.ico') }}" rel=icon>
+        <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+        <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+        <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+        <!-- Include all compiled plugins (below), or include individual files as needed -->
+        <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+    </head>
+
+    <header>
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Wan Emulator FrontEnd</a>
+                </div>
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="{{ active.status }}"><a href="{{ url_for('status') }}">Status</a></li>
+                    <li class="{{ active.config }}"><a href="{{ url_for('config') }}">Config</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <body>
+        <div class="container-fluid">
+            {% block status %}{% endblock %}
+            {% block config %}{% endblock %}
+        </div>
+    </body>
+</html>
