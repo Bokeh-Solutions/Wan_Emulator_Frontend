@@ -6,13 +6,13 @@ app = Flask(__name__)
 
 @app.route('/config')
 def config():
-    active = {"status": "", "config": "active"}
+    active = {"status": "", "config": "bg-success"}
     return render_template('config.html', active=active)
 
 
 @app.route('/')
 def status():
-    active = {"status": "active", "config": ""}
+    active = {"status": "bg-success", "config": ""}
     return render_template('status.html', active=active)
 
 
