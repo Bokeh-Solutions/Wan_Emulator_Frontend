@@ -10,9 +10,29 @@
         <div class="col-xs-4">
         </div>
     </div>
+    <hr>
     <div class="row">
-        <div class="col-xs-12">
-            <p>Hello World Status!!!</p>
+        <div class="col-xs-6">
+            <h2>Network Interface Status</h2>
+            <table class="table table-bordered table-condensed">
+                <tr>
+                    <td class="text-center active"><b>#</b></td>
+                    <td class="text-center active"><b>Name</b></td>
+                    <td class="text-center active"><b>Status</b></td>
+                </tr>
+                {% for interface in interfaces %}
+                    <tr>
+                    <td class="text-center">{{ interface }}</td>
+                    <td class="text-center">{{ interfaces[interface].name }}</td>
+                    {% if interfaces[interface].status in ["up"] %}
+                        <td class="text-center success">{{ interfaces[interface].status }}</td>
+                    {% else %}
+                        <td class="text-center danger">{{ interfaces[interface].status}}</td>
+                    {% endif %}
+                    </tr>
+                {% endfor %}
+            </table>
         </div>
     </div>
+    <hr>
 {% endblock %}
