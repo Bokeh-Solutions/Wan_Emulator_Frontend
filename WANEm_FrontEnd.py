@@ -24,7 +24,6 @@ def get_interfaces():
             # Add data to the if_list dictionary
             if_list[regex.group(1)]={'name':regex.group(2).lower(), 'status':regex.group(3).lower()}
     # Return the dictionary
-    print repr(if_list)
     return if_list
 
 
