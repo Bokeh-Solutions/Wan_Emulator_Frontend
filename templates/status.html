@@ -18,13 +18,19 @@
                 <tr>
                     <td class="text-center active"><b>#</b></td>
                     <td class="text-center active"><b>Name</b></td>
+                    <td class="text-center active"><b>IP Address</b></td>
                     <td class="text-center active"><b>Status</b></td>
                 </tr>
                 {% for interface in interfaces %}
                     <tr>
                     <td class="text-center">{{ interface }}</td>
                     <td class="text-center">{{ interfaces[interface].name }}</td>
-                    {% if interfaces[interface].status in ["up"] %}
+                    {% if interfaces[interface].ip_addr %}
+                        <td class="text-center">{{ interfaces[interface].ip_addr }}</td>
+                    {% else %}
+                        <td class="text-center"></td>
+                    {% endif %}
+                    {% if interfaces[interface].status == "up" %}
                         <td class="text-center success">{{ interfaces[interface].status }}</td>
                     {% else %}
                         <td class="text-center danger">{{ interfaces[interface].status}}</td>
