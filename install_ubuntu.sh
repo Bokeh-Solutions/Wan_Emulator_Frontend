@@ -47,8 +47,8 @@ do
 done
 
 #Create Installation Directory
-mkdir $INSTALL_DIR
+mkdir -p $INSTALL_DIR
 
 # Copy content to the installation directory
-cp .* $INSTALL_DIR
+cp -r . $INSTALL_DIR
 
