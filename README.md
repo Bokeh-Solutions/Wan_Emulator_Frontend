@@ -2,9 +2,9 @@
 
 This script is a frontend to monitor and config a WAN Emulator made with the LINUX TC and netem to emulate conditions like Bandwidth, delay, packet loss in a link.
 
-The Frontend was developed in python using Flask and the subprocess library
+The Frontend was developed in python using Flask and the subprocess library, the web application is presented with Gunicorn and NGINX
 
-The virtual machine where this should be installed should have 1 management interface and 10 interfaces that will create 5 bridge interfaces.
+The virtual machine where this should be installed should have 1 management interface and a minimum of 2 and a maximum of 10 interfaces that will create 1 to 5 bridge interfaces.
 
 This Front End was tested only on Ubuntu 16.04 LTS.
 
