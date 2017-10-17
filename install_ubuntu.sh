@@ -30,7 +30,7 @@ apt-get update
 apt-get -y dist-upgrade
 
 # Install git and python-pip
-apt-get -y git python-pip bridge-utils gnunicorn nginx
+apt-get -y install git python-pip bridge-utils gnunicorn nginx
 
 # Install pip
 pip install Flask
