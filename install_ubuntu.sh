@@ -36,7 +36,7 @@ apt-get -y install git python-pip bridge-utils gunicorn nginx
 pip install Flask
 
 # Creating Bridge Interfaces
-for i in {1..$NUMBER_BRIDGES}
+for (( i=1; i<=$NUMBER_BRIDGES; i++ ))
 do
     br_name='BR'$i'_NAME'
     br_if_in='BR'$i'_IF_IN'
