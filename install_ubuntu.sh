@@ -41,9 +41,9 @@ do
     br_name='BR'$i'_NAME'
     br_if_in='BR'$i'_IF_IN'
     br_if_out='BR'$i'_IF_OUT'
-    brctl addbr $br_name
-    brctl addif $br_name $br_if_in
-    brctl addif $br_name $br_if_out
+    brctl addbr ${!br_name}
+    brctl addif ${!br_name} ${!br_if_in}
+    brctl addif ${!br_name} ${!br_if_out}
 done
 
 #Create Installation Directory
