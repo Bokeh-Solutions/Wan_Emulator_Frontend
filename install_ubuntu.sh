@@ -52,3 +52,6 @@ mkdir -p $INSTALL_DIR
 # Copy content to the installation directory
 cp -r . $INSTALL_DIR
 
+# Remove installation file
+rm -fr $INSTALL_DIR/install_ubuntu.sh
+
