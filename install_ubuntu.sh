@@ -46,6 +46,7 @@ do
     brctl addif ${!br_name} ${!br_if_in}
     brctl addif ${!br_name} ${!br_if_out}
 done
+echo '***** Bridge Interfaces Created!!! *****'
 
 #Create Installation Directory
 echo "***** Creating installation directory *****"
@@ -56,5 +57,26 @@ cp -r . $INSTALL_DIR
 
 # Remove installation file
 rm -fr $INSTALL_DIR/install_ubuntu.sh
+echo "***** Installation directory Created!!! *****"
 
-#
+# Starting Gunicorn
+echo "***** Starting Gunicorn on 0.0.0.0:8000 *****"
+cd $INSTALL_DIR
+gunicorn --bind 0.0.0.0:8000 wsgi
+echo "***** Gunicorn Running!!! *****"
+
+#Create service for automatic bootup
+cat > /etc/systemd/system/wanem.service << EOF
+[Unit]
+Description=Gunicorn instance to serve Wan Emulator Frontend Project
+After=network.target
+
+[Service]
+User=wanem_user
+Group=www-data
+WorkingDirectory=$INSTALL_DIR
+ExecStart= gunicorn --workers 3 --bind unix:wanem.sock -m 007 wsgi:app
+
+[Install]
+WantedBy=multi-user.target
+EOF
