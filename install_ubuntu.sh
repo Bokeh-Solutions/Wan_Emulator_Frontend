@@ -106,7 +106,7 @@ server {
 
     location / {
         include proxy_params;
-        proxy_pass http://unix:'$INSTALL_DIR'wanem.sock;
+        proxy_pass http://unix:${INSTALL_DIR}wanem.sock;
     }
 }
 EOF

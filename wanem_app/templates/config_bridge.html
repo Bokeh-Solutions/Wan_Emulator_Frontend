@@ -1,0 +1,41 @@
+{% extends "main.html" %}
+{% block config %}
+    <div class="row">
+        <div class="col-xs-12">
+            <h3 class="text-center bg-info">Bridge {{ bridge }} Configuration</h3>
+            <form>
+                <div class="col-xs-12">
+                    <h4 class="text-center">Delay Configuration</h4>
+                </div>
+                <div class="col-xs-4 form-group">
+                    <label for="InputMeanDelay">Mean Delay (ms)</label>
+                    <input type="number" class="form-control" id="InputMeanDelay" placeholder="Mean Delay">
+                </div>
+                <div class="col-xs-4 form-group">
+                    <label for="InputStdDev">Standard Deviation (ms)</label>
+                    <input type="number" class="form-control" id="InputStdDev" placeholder="Standard Deviation">
+                </div>
+                <div class="col-xs-4 form-group">
+                    <label for="InputDelayCorrelation">Delay Correlation (%)</label>
+                    <input type="number" class="form-control" id="InputDelayCorrelation" placeholder="Delay Correlation">
+                </div>
+                <div class="col-xs-12">
+                    <h4 class="text-center">Packet Loss Configuration</h4>
+                </div>
+                <div class="col-xs-4 form-group">
+                    <label for="InputPktLoss">Packet Loss (%)</label>
+                    <input type="number" class="form-control" id="InputPktLoss" placeholder="Packet Loss">
+                </div>
+                <div class="col-xs-4 form-group">
+                    <label for="InputPktLossCorrelation">Packet Loss Correlation (%)</label>
+                    <input type="number" class="form-control" id="InputPktLossCorrelation" placeholder="Packet Loss Correlation">
+                </div>
+                <div class="col-xs-12">
+                    <hr>
+                    <button type="submit" class="btn btn-default">Bridge Config</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

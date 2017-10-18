@@ -23,11 +23,11 @@
         <nav class="navbar navbar-default">
             <div class="container-fluid">
                 <div class="navbar-header">
-                    <a class="navbar-brand" href="#">Wan Emulator FrontEnd</a>
+                    <a class="navbar-brand" href="#">Wan Emulator FrontEnd [ {{ active.title }} ]</a>
                 </div>
                 <ul class="nav navbar-nav navbar-right">
                     <li class="{{ active.status }}"><a href="{{ url_for('status') }}">Status</a></li>
-                    <li class="{{ active.config }}"><a href="{{ url_for('config') }}">Config</a></li>
+                    <li class="{{ active.config }}"><a href="{{ url_for('config', br='all') }}">Config</a></li>
                 </ul>
             </div>
         </nav>

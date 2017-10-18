@@ -1,19 +1,8 @@
 {% extends "main.html" %}
 {% block status %}
-    <!-- Creating row with the Sub-title -->
-    <div class="row">
-        <div class="col-xs-4">
-        </div>
-        <div class="col-xs-4">
-            <h2 class="text-center bg-info">Status</h2>
-        </div>
-        <div class="col-xs-4">
-        </div>
-    </div>
-    <hr>
     <div class="row">
         <div class="col-xs-6">
-            <h2>Network Interface Status</h2>
+            <h2 class="text-center">Network Interface Status</h2>
             <table class="table table-bordered table-condensed">
                 <tr>
                     <td class="text-center active"><b>#</b></td>
@@ -38,6 +27,35 @@
                     </tr>
                 {% endfor %}
             </table>
+        </div>
+        <div class="col-xs-6">
+            <h2 class="text-center">Bridge Interface Status</h2>
+            <table class="table table-bordered table-condensed">
+                <tr>
+                    <td class="text-center active"><b>Name</b></td>
+                    <td class="text-center active"><b>Interface in</b></td>
+                    <td class="text-center active"><b>Interface Out</b></td>
+                </tr>
+                {% for bridge in bridges %}
+                    <tr>
+                        <td class="text-center">{{ bridges[bridge].name }}</td>
+                        <td class="text-center">{{ bridges[bridge].interface_in }}</td>
+                        <td class="text-center">{{ bridges[bridge].interface_out }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="panel panel-default">
+                <div class="panel-heading text-center"><h3>Traffic Control Configuration</h3></div>
+                <div class="panel-body">
+                    {% for status in tc_status %}
+                        <p>{{ status }}</p>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     </div>
     <hr>

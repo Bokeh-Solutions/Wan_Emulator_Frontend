@@ -1,18 +1,11 @@
 {% extends "main.html" %}
 {% block config %}
-    <!-- Creating row with the the Sub-title -->
-    <div class="row">
-        <div class="col-xs-4">
-        </div>
-        <div class="col-xs-4">
-            <h2 class="text-center bg-info">Configuration</h2>
-        </div>
-        <div class="col-xs-4">
-        </div>
-    </div>
     <div class="row">
         <div class="col-xs-12">
-            <p>Hello World Configuration!!!</p>
+            <h3 class="text-center bg-info">Choose the Bridge to Configure</h3>
+            {% for bridge in bridges %}
+                <p><a class="btn btn-primary" href="{{ url_for('config', br=bridges[bridge].name) }}" role="button">Configure Bridge {{ bridges[bridge].name }}</a></p>
+            {% endfor %}
         </div>
     </div>
 {% endblock %}
