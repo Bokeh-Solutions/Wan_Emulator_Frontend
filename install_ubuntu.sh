@@ -36,6 +36,7 @@ apt-get -y install python-pip bridge-utils gunicorn nginx
 pip install Flask
 
 # Creating Bridge Interfaces
+echo '***** Creating Bridge Interfaces *****'
 for (( i=1; i<=$NUMBER_BRIDGES; i++ ))
 do
     br_name='BR'$i'_NAME'
@@ -47,6 +48,7 @@ do
 done
 
 #Create Installation Directory
+echo "***** Creating installation directory *****"
 mkdir -p $INSTALL_DIR
 
 # Copy content to the installation directory
@@ -55,3 +57,4 @@ cp -r . $INSTALL_DIR
 # Remove installation file
 rm -fr $INSTALL_DIR/install_ubuntu.sh
 
+#
