@@ -30,10 +30,7 @@ apt-get update
 apt-get -y dist-upgrade
 
 # Install git and python-pip
-apt-get -y install python-pip bridge-utils gunicorn nginx
-
-# Install pip
-pip install Flask
+apt-get -y install python-pip python-virtualenv bridge-utils nginx
 
 # Creating Bridge Interfaces
 echo '***** Creating Bridge Interfaces *****'
@@ -59,13 +56,29 @@ cp -r . $INSTALL_DIR
 rm -fr $INSTALL_DIR/install_ubuntu.sh
 echo "***** Installation directory Created!!! *****"
 
-# Starting Gunicorn
-echo "***** Starting Gunicorn on 0.0.0.0:8000 *****"
+#Create virtual environment
+echo "***** Creating Virtual Environment *****"
 cd $INSTALL_DIR
-gunicorn --bind 0.0.0.0:8000 wsgi
-echo "***** Gunicorn Running!!! *****"
+virtualenv wanem_env
+source wanem_env/bin/activate
+
+pip install flask gunicorn
+
+deactivate
+echo "***** Virtual Environment Created *****"
+
+#Creating User
+echo "***** Creating wanem_user *****"
+useradd -p wanem -d /home/wanem_user -m -G www-data,sudo -s /bin/bash wan_user
+echo "***** wanem_user Created!!!*****"
+
+#Changing perimssions to the directory
+echo "***** Changing Permissions to the Installation directory *****"
+chown -R wanem_user:www-data $INSTALL_DIR
+echo "***** Permissions to the Installation directory changed !!!*****"
 
 #Create service for automatic bootup
+echo "***** Creating system service for the application *****"
 cat > /etc/systemd/system/wanem.service << EOF
 [Unit]
 Description=Gunicorn instance to serve Wan Emulator Frontend Project
@@ -75,8 +88,10 @@ After=network.target
 User=wanem_user
 Group=www-data
 WorkingDirectory=$INSTALL_DIR
-ExecStart= gunicorn --workers 3 --bind unix:wanem.sock -m 007 wsgi:app
+Environment="PATH=$INSTALL_DIR/wanem_app/wanem_env/bin"
+ExecStart= /usr/bin/gunicorn --workers 3 --bind unix:wanem.sock -m 007 wsgi:app
 
 [Install]
 WantedBy=multi-user.target
 EOF
+echo "***** System service for the application Created!!! *****"
