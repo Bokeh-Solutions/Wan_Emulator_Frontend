@@ -57,15 +57,9 @@ rm -fr $INSTALL_DIR/install_ubuntu.sh
 echo "***** Installation directory Created!!! *****"
 
 #Create virtual environment
-echo "***** Creating Virtual Environment *****"
-cd $INSTALL_DIR
-virtualenv wanem_env
-source wanem_env/bin/activate
-
+echo "***** Installing gunicorn and flask *****"
 pip install flask gunicorn
-
-deactivate
-echo "***** Virtual Environment Created *****"
+echo "***** Gunicorn and Flask Installed!!!! *****"
 
 #Creating User
 echo "***** Creating wanem_user *****"
@@ -81,15 +75,20 @@ echo "***** Permissions to the Installation directory changed !!!*****"
 echo "***** Creating system service for the application *****"
 cat > /etc/systemd/system/wanem.service << EOF
 [Unit]
-Description=Gunicorn instance to serve Wan Emulator Frontend Project
+Description=Gunicorn instance to serve the Wan Emulator FrontEnd
 After=network.target
 
 [Service]
-User=wanem_user
+PIDFile=/run/gunicorn/pid
+User=mercolino
 Group=www-data
+RuntimeDirectory=gunicorn
 WorkingDirectory=$INSTALL_DIR
-Environment="PATH=$INSTALL_DIR/wanem_app/wanem_env/bin"
-ExecStart= /usr/bin/gunicorn --workers 3 --bind unix:wanem.sock -m 007 wsgi:app
+ExecStart=/usr/bin/gunicorn --pid /run/gunicorn/pid   \
+          --bind unix:test.sock wsgi:app
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
