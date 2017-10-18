@@ -30,7 +30,7 @@ apt-get update
 apt-get -y dist-upgrade
 
 # Install git and python-pip
-apt-get -y install python-pip python-virtualenv bridge-utils nginx
+apt-get -y install python-pip python-virtualenv bridge-utils nginx gunicorn
 
 # Creating Bridge Interfaces
 echo '***** Creating Bridge Interfaces *****'
@@ -58,12 +58,12 @@ echo "***** Installation directory Created!!! *****"
 
 #Create virtual environment
 echo "***** Installing gunicorn and flask *****"
-pip install flask gunicorn
+pip install flask
 echo "***** Gunicorn and Flask Installed!!!! *****"
 
 #Creating User
 echo "***** Creating wanem_user *****"
-useradd -p wanem -d /home/wanem_user -m -G www-data,sudo -s /bin/bash wan_user
+useradd -p wanem -d /home/wanem_user -m -G www-data,sudo -s /bin/bash wanem_user
 echo "***** wanem_user Created!!!*****"
 
 #Changing perimssions to the directory
@@ -80,12 +80,11 @@ After=network.target
 
 [Service]
 PIDFile=/run/gunicorn/pid
-User=mercolino
+User=wanem_user
 Group=www-data
 RuntimeDirectory=gunicorn
 WorkingDirectory=$INSTALL_DIR
-ExecStart=/usr/bin/gunicorn --pid /run/gunicorn/pid   \
-          --bind unix:test.sock wsgi:app
+ExecStart=/usr/bin/gunicorn --pid /run/gunicorn/pid --bind unix:wanem.sock wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
 ExecStop=/bin/kill -s TERM $MAINPID
 PrivateTmp=true
