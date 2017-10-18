@@ -2,7 +2,7 @@
 
 # Installation Directory
 INSTALL_DIR='/opt/wanem_frontend/'
-MGMT_IF='enp0s3'
+IP='10.0.2.15'
 NUMBER_BRIDGES=5
 # Bridge 1
 BR1_NAME='br0'
@@ -92,4 +92,25 @@ PrivateTmp=true
 [Install]
 WantedBy=multi-user.target
 EOF
+
+systemctl start wanem
+systemctl enable wanem
 echo "***** System service for the application Created!!! *****"
+
+# Configuring NGINX
+echo "***** Configuring NGINX *****"
+cat > /etc/nginx/sites-available/wanem <<EOF
+server {
+    listen 80;
+    server_name $IP;
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:$INSTALL_DIRwanem.sock;
+    }
+}
+EOF
+
+sudo ln -s /etc/nginx/sites-available/wanem /etc/nginx/sites-enabled
+sudo systemctl restart nginx
+echo "***** NGINX Configured*****"
