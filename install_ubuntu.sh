@@ -128,3 +128,8 @@ EOF
 sudo ln -s /etc/nginx/sites-available/wanem /etc/nginx/sites-enabled
 sudo systemctl restart nginx
 echo "***** NGINX Configured*****"
+
+# Restart Networking
+echo "***** Restart networking *****"
+systemctl restart networking
+echo "***** Networking restarted!!! *****"
