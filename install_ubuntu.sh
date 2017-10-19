@@ -36,20 +36,17 @@ apt-get -y install python-pip python-virtualenv bridge-utils nginx gunicorn
 echo '***** Creating Bridge Interfaces *****'
 for (( i=1; i<=$NUMBER_BRIDGES; i++ ))
 do
-    br_name='BR'$i'_NAME'
-    br_if_in='BR'$i'_IF_IN'
-    br_if_out='BR'$i'_IF_OUT'
-    brctl addbr ${!br_name}
-    brctl addif ${!br_name} ${!br_if_in}
-    brctl addif ${!br_name} ${!br_if_out}
-    ip link set ${!br_if_in} up
-    ip link set ${!br_if_out} up
-    ip address add $i.$i.$i.$i/32 dev ${!br_name}
-    ip link set ${!br_name} up
+    cat > /etc/network/interfaces <<EOF
+        auto ${!br_name}
+        iface ${!br_name} inet manual
+        bridge_ports$ {!br_if_in} ${!br_if_out}
+        bridge_stp off
+        address $i.$i.$i.$i
+        netmask 255.255.255.255
+
+EOF
 done
 echo '***** Bridge Interfaces Created!!! *****'
-
-#TODO: Bring up all interfaces with ip link set <int> up
 
 # Enable netem Kernel Module
 echo '***** Enabling Netem Kernel Module *****'
