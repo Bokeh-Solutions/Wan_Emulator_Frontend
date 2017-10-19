@@ -4,7 +4,7 @@
         <div class="col-xs-12">
             <h3 class="text-center bg-info">Choose the Bridge to Configure</h3>
             {% for bridge in bridges %}
-                <p><a class="btn btn-primary" href="{{ url_for('config', br=bridges[bridge].name) }}" role="button">Configure Bridge {{ bridges[bridge].name }}</a></p>
+                <p><a class="btn btn-primary" href="{{ url_for('config_br', br=bridges[bridge].name) }}" role="button">Configure Bridge {{ bridges[bridge].name }}</a></p>
             {% endfor %}
         </div>
     </div>

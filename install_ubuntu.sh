@@ -45,6 +45,13 @@ do
 done
 echo '***** Bridge Interfaces Created!!! *****'
 
+#TODO: Bring up all interfaces with ip link set <int> up
+
+# Enable netem Kernel Module
+echo '***** Enabling Netem Kernel Module *****'
+modprobe sch_netem
+echo '***** Netem Kernel Module Enabled *****'
+
 #Create Installation Directory
 echo "***** Creating installation directory *****"
 mkdir -p $INSTALL_DIR
@@ -56,15 +63,20 @@ cp -r . $INSTALL_DIR
 rm -fr $INSTALL_DIR/install_ubuntu.sh
 echo "***** Installation directory Created!!! *****"
 
-#Create virtual environment
+# Create virtual environment
 echo "***** Installing gunicorn and flask *****"
-pip install flask
+pip install flask Flask-WTF
 echo "***** Gunicorn and Flask Installed!!!! *****"
 
-#Creating User
+# Creating User
 echo "***** Creating wanem_user *****"
 useradd -p wanem -d /home/wanem_user -m -G www-data,sudo -s /bin/bash wanem_user
 echo "***** wanem_user Created!!!*****"
+
+# Adding wanem_user to sudoers to allow tc excution
+echo "***** Adding wanem_user to sudoers to allow tc excution *****"
+echo "wanem_user ALL=(root) NOPASSWD: /sbin/tc" >> /etc/sudoers
+echo "***** wanem_user added to sudoers!!!!!*****"
 
 #Changing perimssions to the directory
 echo "***** Changing Permissions to the Installation directory *****"
