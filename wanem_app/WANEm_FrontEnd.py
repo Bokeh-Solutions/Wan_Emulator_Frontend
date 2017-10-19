@@ -9,8 +9,10 @@ from wtforms import IntegerField, DecimalField
 from wtforms.validators import InputRequired
 import subprocess as sub
 import re
+import os
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
 
 
 class Bridge_Config_Form(FlaskForm):
@@ -84,6 +86,8 @@ def get_interfaces():
 
 @app.route('/config_br/<br>', methods=['GET', 'POST'])
 def config_br(br):
+    bridges = get_bridges()
+    iface = bridges[int(br[-1])]['interface_in']
     form = Bridge_Config_Form(request.form)
     if request.method == 'POST':
         print form.errors
@@ -98,16 +102,16 @@ def config_br(br):
         print InputPktLoss
         print InputPktLossCorrelation
         if form.validate_on_submit():
-            sub.call('sudo tc qdisc del dev ' + br + ' root', shell=True)
+            sub.call('sudo tc qdisc del dev ' + iface + ' root', shell=True)
             if InputMeanDelay <> 0 and InputPktLoss <> 0:
-                sub.call('sudo tc qdisc add dev ' + br + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
+                sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
                      '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + InputDelayCorrelation + '%',
                      shell=True)
             elif InputMeanDelay == 0 and InputPktLoss <> 0:
-                sub.call('sudo tc qdisc add dev ' + br + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
+                sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
                     '%',shell=True)
             elif InputMeanDelay <> 0 and InputPktLoss == 0:
-                sub.call('sudo tc qdisc add dev ' + br + ' root netem delay ' + InputMeanDelay + 'ms ' + InputStdDev +
+                sub.call('sudo tc qdisc add dev ' + iface + ' root netem delay ' + InputMeanDelay + 'ms ' + InputStdDev +
                          'ms ' + InputDelayCorrelation + '%',shell=True)
             return redirect('/config')
 
@@ -132,5 +136,4 @@ def status():
 
 
 if __name__ == '__main__':
-    app.config['SECRET_KEY'] = 'development'
     app.run(host='0.0.0.0')
