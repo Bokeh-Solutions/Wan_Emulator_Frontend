@@ -42,6 +42,10 @@ do
     brctl addbr ${!br_name}
     brctl addif ${!br_name} ${!br_if_in}
     brctl addif ${!br_name} ${!br_if_out}
+    ip link set ${!br_if_in} up
+    ip link set ${!br_if_out} up
+    ip address add $i.$i.$i.$i/32 dev ${!br_name}
+    ip link set ${!br_name} up
 done
 echo '***** Bridge Interfaces Created!!! *****'
 
