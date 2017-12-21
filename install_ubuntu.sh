@@ -125,6 +125,7 @@ server {
 }
 EOF
 
+sudo rm -fr /etc/nginx/sites-available/default
 sudo ln -s /etc/nginx/sites-available/wanem /etc/nginx/sites-enabled
 sudo systemctl restart nginx
 echo "***** NGINX Configured*****"
