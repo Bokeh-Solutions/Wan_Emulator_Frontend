@@ -91,11 +91,15 @@ def config_br(br):
     form = Bridge_Config_Form(request.form)
     if request.method == 'POST':
         print form.errors
+        InputBwLimit = request.form['InputBwLimit']
+        InputBwBurst = request.form['InputBwBurst']
         InputMeanDelay = request.form['InputMeanDelay']
         InputStdDev = request.form['InputStdDev']
         InputDelayCorrelation = request.form['InputDelayCorrelation']
         InputPktLoss = request.form['InputPktLoss']
         InputPktLossCorrelation = request.form['InputPktLossCorrelation']
+        print InputBwLimit
+        print InputBwBurst
         print InputMeanDelay
         print InputStdDev
         print InputDelayCorrelation

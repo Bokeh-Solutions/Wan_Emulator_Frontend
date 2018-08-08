@@ -6,6 +6,17 @@
             <form action="" method="post">
                 {{ form.csrf_token }}
                 <div class="col-xs-12">
+                    <h4 class="text-center">Bandwidth Configuration</h4>
+                </div>
+                <div class="col-xs-4 form-group">
+                    <label for="InputBwLimit">{{ form.InputBwLimit.label }}</label>
+                    <input type="{{ form.InputBwLimit.type }}" class="form-control" id="InputBwLimit" name="InputBwLimit" placeholder="Bandwidth Rate">
+                </div>
+                <div class="col-xs-4 form-group">
+                    <label for="InputBwBurst">{{ form.InputBwBurst.label }}</label>
+                    <input type="{{ form.InputBwBurst.type }}" class="form-control" id="InputBwBurst" name="InputBwBurst" placeholder="Bandwidth Burst">
+                </div>
+                <div class="col-xs-12">
                     <h4 class="text-center">Delay Configuration</h4>
                 </div>
                 <div class="col-xs-4 form-group">
@@ -19,6 +30,10 @@
                 <div class="col-xs-4 form-group">
                     <label for="InputDelayCorrelation">{{ form.InputDelayCorrelation.label }}</label>
                     <input type="{{ form.InputDelayCorrelation.type }}" class="form-control" id="InputDelayCorrelation" name="InputDelayCorrelation" placeholder="Delay Correlation">
+                </div>
+                <div class="col-xs-4 form-group">
+                    <label for="InputDelayDistribution">{{ form.InputDelayDistribution.label }}</label>
+                    <input type="{{ form.InputDelayDistribution.type }}" class="form-control" id="InputDelayDistribution" name="InputDelayDistribution" placeholder="Delay Distribution">
                 </div>
                 <div class="col-xs-12">
                     <h4 class="text-center">Packet Loss Configuration</h4>
