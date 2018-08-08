@@ -19,31 +19,46 @@
                 <div class="col-xs-12">
                     <h4 class="text-center">Delay Configuration</h4>
                 </div>
-                <div class="col-xs-4 form-group">
+                <div class="col-xs-3 form-group">
                     <label for="InputMeanDelay">{{ form.InputMeanDelay.label }}</label>
+                    {% for e in form.InputMeanDelay.errors %}
+                        <span class="label label-danger">{{ e }}</span>
+                    {% endfor %}
                     <input type="{{ form.InputMeanDelay.type }}" class="form-control" id="InputMeanDelay" name="InputMeanDelay" placeholder="Mean Delay">
                 </div>
-                <div class="col-xs-4 form-group">
+                <div class="col-xs-3 form-group">
                     <label for="InputStdDev">{{ form.InputStdDev.label }}</label>
+                    {% for e in form.InputStdDev.errors %}
+                        <span class="label label-danger">{{ e }}</span>
+                    {% endfor %}
                     <input type="{{ form.InputStdDev.type }}" class="form-control" id="InputStdDev" name="InputStdDev" placeholder="Standard Deviation">
                 </div>
-                <div class="col-xs-4 form-group">
+                <div class="col-xs-3 form-group">
                     <label for="InputDelayCorrelation">{{ form.InputDelayCorrelation.label }}</label>
+                    {% for e in form.InputDelayCorrelation.errors %}
+                        <span class="label label-danger">{{ e }}</span>
+                    {% endfor %}
                     <input type="{{ form.InputDelayCorrelation.type }}" class="form-control" id="InputDelayCorrelation" name="InputDelayCorrelation" placeholder="Delay Correlation">
                 </div>
-                <div class="col-xs-4 form-group">
+                <div class="col-xs-3 form-group">
                     <label for="InputDelayDistribution">{{ form.InputDelayDistribution.label }}</label>
-                    <input type="{{ form.InputDelayDistribution.type }}" class="form-control" id="InputDelayDistribution" name="InputDelayDistribution" placeholder="Delay Distribution">
+                    {{ form.InputDelayDistribution(class='form-control') }}
                 </div>
                 <div class="col-xs-12">
                     <h4 class="text-center">Packet Loss Configuration</h4>
                 </div>
                 <div class="col-xs-4 form-group">
                     <label for="InputPktLoss">{{ form.InputPktLoss.label }}</label>
+                    {% for e in form.InputPktLoss.errors %}
+                        <span class="label label-danger">{{ e }}</span>
+                    {% endfor %}
                     <input type="{{ form.InputPktLoss.type }}" class="form-control" id="InputPktLoss" name="InputPktLoss" placeholder="Packet Loss">
                 </div>
                 <div class="col-xs-4 form-group">
                     <label for="InputPktLossCorrelation">{{ form.InputPktLossCorrelation.label }}</label>
+                    {% for e in form.InputPktLossCorrelation.errors %}
+                        <span class="label label-danger">{{ e }}</span>
+                    {% endfor %}
                     <input type="{{ form.InputPktLossCorrelation.type }}" class="form-control" id="InputPktLossCorrelation" name="InputPktLossCorrelation" placeholder="Packet Loss Correlation">
                 </div>
                 <div class="col-xs-12">

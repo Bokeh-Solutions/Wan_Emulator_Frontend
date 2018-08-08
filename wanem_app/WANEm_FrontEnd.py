@@ -5,8 +5,8 @@ from flask import render_template
 from flask import request
 from flask import redirect
 from flask_wtf import FlaskForm
-from wtforms import IntegerField, DecimalField
-from wtforms.validators import InputRequired
+from wtforms import IntegerField, DecimalField, SelectField
+from wtforms.validators import InputRequired, Optional
 import subprocess as sub
 import re
 import os
@@ -16,9 +16,13 @@ app.secret_key = os.urandom(24)
 
 
 class Bridge_Config_Form(FlaskForm):
+    InputBwLimit = IntegerField('Bandwidth Rate (kbps)', validators=[Optional()])
+    InputBwBurst = IntegerField('Bandwidth Burst (bytes)', validators=[Optional()])
     InputMeanDelay = IntegerField('Mean Delay (ms)', validators=[InputRequired()])
     InputStdDev = IntegerField('Standard Deviation (ms)', validators=[InputRequired()])
     InputDelayCorrelation = IntegerField('Delay Correlation (%)', validators=[InputRequired()])
+    InputDelayDistribution = SelectField('Delay Distribution', choices=[('normal', 'Normal'),('pareto', 'Pareto'),('paretonormal', 'Pareto Normal')],
+                                         default='Normal')
     InputPktLoss = DecimalField('Packet Loss (%)', validators=[InputRequired()])
     InputPktLossCorrelation = IntegerField('Packet Loss Correlation (%)', validators=[InputRequired()])
 
@@ -90,12 +94,12 @@ def config_br(br):
     iface = bridges[int(br[-1])]['interface_in']
     form = Bridge_Config_Form(request.form)
     if request.method == 'POST':
-        print form.errors
         InputBwLimit = request.form['InputBwLimit']
         InputBwBurst = request.form['InputBwBurst']
         InputMeanDelay = request.form['InputMeanDelay']
         InputStdDev = request.form['InputStdDev']
         InputDelayCorrelation = request.form['InputDelayCorrelation']
+        InputDelayDistribution = request.form['InputDelayDistribution']
         InputPktLoss = request.form['InputPktLoss']
         InputPktLossCorrelation = request.form['InputPktLossCorrelation']
         print InputBwLimit
@@ -103,21 +107,39 @@ def config_br(br):
         print InputMeanDelay
         print InputStdDev
         print InputDelayCorrelation
+        print InputDelayDistribution
         print InputPktLoss
         print InputPktLossCorrelation
         if form.validate_on_submit():
+            print form.errors
             sub.call('sudo tc qdisc del dev ' + iface + ' root', shell=True)
-            if InputMeanDelay <> 0 and InputPktLoss <> 0:
-                sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
-                     '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + InputDelayCorrelation + '%',
-                     shell=True)
-            elif InputMeanDelay == 0 and InputPktLoss <> 0:
-                sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
-                    '%',shell=True)
-            elif InputMeanDelay <> 0 and InputPktLoss == 0:
-                sub.call('sudo tc qdisc add dev ' + iface + ' root netem delay ' + InputMeanDelay + 'ms ' + InputStdDev +
-                         'ms ' + InputDelayCorrelation + '%',shell=True)
-            return redirect('/config')
+            if InputBwLimit and InputBwBurst:
+                sub.call(
+                    'sudo tc qdisc add dev ' + iface + ' root handle 1:0 tbf rate' + InputBwLimit + 'kbit burst ' +
+                    InputBwBurst + 'latency 2000',shell=True)
+                if InputMeanDelay and InputPktLoss:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
+                         '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
+                         shell=True)
+                elif not InputMeanDelay and InputPktLoss:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
+                        '%',shell=True)
+                elif InputMeanDelay and not InputPktLoss:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem delay ' + InputMeanDelay + 'ms ' + InputStdDev +
+                             'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
+                return redirect('/config')
+            else:
+                if InputMeanDelay and InputPktLoss:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
+                         '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
+                         shell=True)
+                elif not InputMeanDelay and InputPktLoss:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
+                        '%',shell=True)
+                elif InputMeanDelay and not InputPktLoss:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem delay ' + InputMeanDelay + 'ms ' + InputStdDev +
+                             'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
+                return redirect('/config')
 
     active = {"status": "", "config": "bg-success", "title": "Config " + br}
     return render_template('config_bridge.html', active=active, bridge=br, form=form)
