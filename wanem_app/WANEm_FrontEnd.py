@@ -6,7 +6,7 @@ from flask import request
 from flask import redirect
 from flask_wtf import FlaskForm
 from wtforms import IntegerField, DecimalField, SelectField
-from wtforms.validators import InputRequired, Optional
+from wtforms.validators import InputRequired, Optional, ValidationError
 import subprocess as sub
 import re
 import os
@@ -15,11 +15,26 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
 
+def delay_check(form, field):
+    if field.data >= 1:
+        raise ValidationError('If delay is specified should be greater than 0ms')
+
+
+def jitter_check(delay):
+    message = 'The jitter should be at least 1ms!'
+
+    def _jitter_check(form, field):
+        if delay.data >= 0 :
+            if not (field.data >= 1):
+                raise ValidationError(message)
+
+    return _jitter_check
+
 class Bridge_Config_Form(FlaskForm):
     InputBwLimit = IntegerField('Bandwidth Rate (kbps)', validators=[Optional()])
     InputBwBurst = IntegerField('Bandwidth Burst (bytes)', validators=[Optional()])
-    InputMeanDelay = IntegerField('Mean Delay (ms)', validators=[InputRequired()])
-    InputStdDev = IntegerField('Standard Deviation (ms)', validators=[InputRequired()])
+    InputMeanDelay = IntegerField('Mean Delay (ms)', validators=[Optional(), delay_check])
+    InputStdDev = IntegerField('Standard Deviation (ms)', validators=[Optional(), jitter_check(InputMeanDelay)])
     InputDelayCorrelation = IntegerField('Delay Correlation (%)', validators=[InputRequired()])
     InputDelayDistribution = SelectField('Delay Distribution', choices=[('normal', 'Normal'),('pareto', 'Pareto'),('paretonormal', 'Pareto Normal')],
                                          default='Normal')
@@ -102,21 +117,13 @@ def config_br(br):
         InputDelayDistribution = request.form['InputDelayDistribution']
         InputPktLoss = request.form['InputPktLoss']
         InputPktLossCorrelation = request.form['InputPktLossCorrelation']
-        print InputBwLimit
-        print InputBwBurst
-        print InputMeanDelay
-        print InputStdDev
-        print InputDelayCorrelation
-        print InputDelayDistribution
-        print InputPktLoss
-        print InputPktLossCorrelation
         if form.validate_on_submit():
-            print form.errors
             sub.call('sudo tc qdisc del dev ' + iface + ' root', shell=True)
             if InputBwLimit and InputBwBurst:
+                print 'sudo tc qdisc add dev ' + iface + ' root handle 1:0 tbf rate ' + InputBwLimit + 'kbit buffer ' + InputBwBurst + ' latency 2000'
                 sub.call(
-                    'sudo tc qdisc add dev ' + iface + ' root handle 1:0 tbf rate' + InputBwLimit + 'kbit burst ' +
-                    InputBwBurst + 'latency 2000',shell=True)
+                    'sudo tc qdisc add dev ' + iface + ' root handle 1:0 tbf rate ' + InputBwLimit + 'kbit buffer ' +
+                    InputBwBurst + ' latency 2000',shell=True)
                 if InputMeanDelay and InputPktLoss:
                     sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
                          '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
