@@ -131,7 +131,8 @@ def get_interfaces():
 @app.route('/config_br/<br>', methods=['GET', 'POST'])
 def config_br(br):
     bridges = get_bridges()
-    iface = bridges[int(br[-1])]['interface_in']
+    iface_in = bridges[int(br[-1])]['interface_in']
+    iface_out = bridges[int(br[-1])]['interface_out']
     form = Bridge_Config_Form(request.form)
     if request.method == 'POST':
         InputBwLimit = request.form['InputBwLimit']
@@ -143,63 +144,117 @@ def config_br(br):
         InputPktLoss = request.form['InputPktLoss']
         InputPktLossCorrelation = request.form['InputPktLossCorrelation']
         if form.validate_on_submit():
-            sub.call('sudo tc qdisc del dev ' + iface + ' root', shell=True)
+            sub.call('sudo tc qdisc del dev ' + iface_in + ' root', shell=True)
+            sub.call('sudo tc qdisc del dev ' + iface_out + ' root', shell=True)
             if InputBwLimit:
                 sub.call(
-                    'sudo tc qdisc add dev ' + iface + ' root handle 1:0 tbf rate ' + InputBwLimit + 'kbit buffer ' +
+                    'sudo tc qdisc add dev ' + iface_in + ' root handle 1:0 tbf rate ' + InputBwLimit + 'kbit buffer ' +
                     InputBwBurst + ' latency 2000',shell=True)
-                if InputMeanDelay and InputPktLoss and InputDelayCorrelation and InputPktLossCorrelation:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
-                         '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
+                sub.call(
+                    'sudo tc qdisc add dev ' + iface_out + ' root handle 1:0 tbf rate ' + InputBwLimit + 'kbit buffer ' +
+                    InputBwBurst + ' latency 2000', shell=True)
+                if InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation <> '' and InputPktLossCorrelation <> '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
+                         '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
-                elif InputMeanDelay and InputPktLoss and InputDelayCorrelation and not InputPktLossCorrelation:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
+                    sub.call(
+                        'sudo tc qdisc add dev ' + iface_out + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
+                        '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
+                        shell=True)
+                elif InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation <> '' and InputPktLossCorrelation == '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
-                elif InputMeanDelay and InputPktLoss and not InputDelayCorrelation and InputPktLossCorrelation:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
-                         '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + 'distribution ' + InputDelayDistribution,
+                    sub.call(
+                        'sudo tc qdisc add dev ' + iface_out + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
+                        shell=True)
+                elif InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation == '' and InputPktLossCorrelation <> '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
+                         '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
-                elif InputMeanDelay and InputPktLoss and not InputDelayCorrelation and not InputPktLossCorrelation:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + 'distribution ' + InputDelayDistribution,
+                    sub.call(
+                        'sudo tc qdisc add dev ' + iface_out + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
+                        '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + 'distribution ' + InputDelayDistribution,
+                        shell=True)
+                elif InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation == '' and InputPktLossCorrelation == '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
-                elif not InputMeanDelay and InputPktLoss and InputPktLossCorrelation:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
+                    sub.call(
+                        'sudo tc qdisc add dev ' + iface_out + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + 'distribution ' + InputDelayDistribution,
+                        shell=True)
+                elif InputMeanDelay == '' and InputPktLoss <> '' and InputPktLossCorrelation <> '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
                         '%',shell=True)
-                elif not InputMeanDelay and InputPktLoss and not InputPktLossCorrelation:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% ',shell=True)
-                elif InputMeanDelay and InputDelayCorrelation and not InputPktLoss:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem delay ' + InputMeanDelay + 'ms ' + InputStdDev +
+                    sub.call(
+                        'sudo tc qdisc add dev ' + iface_out + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
+                        '%', shell=True)
+                elif InputMeanDelay == '' and InputPktLoss <> '' and InputPktLossCorrelation == '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ',shell=True)
+                    sub.call('sudo tc qdisc add dev ' + iface_out + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ',
+                             shell=True)
+                elif InputMeanDelay <> '' and InputDelayCorrelation <> '' and InputPktLoss == '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) +
                              'ms ' + InputDelayCorrelation  + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
-                elif InputMeanDelay and not InputDelayCorrelation and not InputPktLoss:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem delay ' + InputMeanDelay + 'ms ' + InputStdDev +
+                    sub.call(
+                        'sudo tc qdisc add dev ' + iface_out + ' parent 1:0 netem delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) +
+                        'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
+                elif InputMeanDelay <> '' and InputDelayCorrelation == '' and InputPktLoss == '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) +
                              'ms ' + 'distribution ' + InputDelayDistribution, shell=True)
+                    sub.call(
+                        'sudo tc qdisc add dev ' + iface_out + ' parent 1:0 netem delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) +
+                        'ms ' + 'distribution ' + InputDelayDistribution, shell=True)
                 return redirect('/config')
             else:
-                if InputMeanDelay and InputPktLoss and InputDelayCorrelation and InputPktLossCorrelation:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
-                         '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
+                if InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation <> '' and InputPktLossCorrelation <> '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
+                         '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
-                elif InputMeanDelay and InputPktLoss and InputDelayCorrelation and not InputPktLossCorrelation:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
+                    sub.call(
+                        'sudo tc qdisc add dev ' + iface_out + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
+                        '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
+                        shell=True)
+                elif InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation <> '' and InputPktLossCorrelation == '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
-                elif InputMeanDelay and InputPktLoss and not InputDelayCorrelation and InputPktLossCorrelation:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
-                         '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + 'distribution ' + InputDelayDistribution,
+                    sub.call(
+                        'sudo tc qdisc add dev ' + iface_out + ' root netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
+                        shell=True)
+                elif InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation == '' and InputPktLossCorrelation <> '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
+                         '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
-                elif InputMeanDelay and InputPktLoss and not InputDelayCorrelation and not InputPktLossCorrelation:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + 'distribution ' + InputDelayDistribution,
+                    sub.call(
+                        'sudo tc qdisc add dev ' + iface_out + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
+                        '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + 'distribution ' + InputDelayDistribution,
+                        shell=True)
+                elif InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation == '' and InputPktLossCorrelation == '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + InputStdDev + 'ms ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
-                elif not InputMeanDelay and InputPktLoss and InputPktLossCorrelation:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
+                    sub.call(
+                        'sudo tc qdisc add dev ' + iface_out + ' root netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + InputStdDev + 'ms ' + 'distribution ' + InputDelayDistribution,
+                        shell=True)
+                elif InputMeanDelay == '' and InputPktLoss <> '' and InputPktLossCorrelation <> '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
                         '%',shell=True)
-                elif not InputMeanDelay and InputPktLoss and not InputPktLossCorrelation:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ',shell=True)
-                elif InputMeanDelay and InputDelayCorrelation and not InputPktLoss:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem delay ' + InputMeanDelay + 'ms ' + InputStdDev +
+                    sub.call(
+                        'sudo tc qdisc add dev ' + iface_out + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
+                        '%', shell=True)
+                elif InputMeanDelay == '' and InputPktLoss <> '' and InputPktLossCorrelation == '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ',shell=True)
+                    sub.call('sudo tc qdisc add dev ' + iface_out + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ',
+                             shell=True)
+                elif InputMeanDelay <> '' and InputDelayCorrelation <> '' and InputPktLoss == '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) +
                              'ms ' + InputDelayCorrelation  + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
-                elif InputMeanDelay and not InputDelayCorrelation and not InputPktLoss:
-                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem delay ' + InputMeanDelay + 'ms ' + InputStdDev +
+                    sub.call(
+                        'sudo tc qdisc add dev ' + iface_in + ' root netem delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) +
+                        'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
+                elif InputMeanDelay <> '' and InputDelayCorrelation == '' and InputPktLoss == '':
+                    sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) +
                              'ms ' + 'distribution ' + InputDelayDistribution, shell=True)
+                    sub.call(
+                        'sudo tc qdisc add dev ' + iface_out + ' root netem delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) +
+                        'ms ' + 'distribution ' + InputDelayDistribution, shell=True)
                 return redirect('/config')
 
     active = {"status": "", "config": "bg-success", "title": "Config " + br}
