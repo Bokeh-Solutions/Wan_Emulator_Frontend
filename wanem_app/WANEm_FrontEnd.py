@@ -37,9 +37,10 @@ class Bridge_Config_Form(FlaskForm):
         if self.InputBwLimit.data is not None and self.InputBwBurst.data is None:
             self.InputBwBurst.errors.append('Burst Should be specified')
             return False
-        if not self.InputMeanDelay.data > 0:
-            self.InputMeanDelay.errors.append('Delay should be greater than 0 ms')
-            return False
+        if self.InputMeanDelay.data is not None:
+            if not self.InputMeanDelay.data > 0:
+                self.InputMeanDelay.errors.append('Delay should be greater than 0 ms')
+                return False
         if self.InputMeanDelay.data is not None and not self.InputStdDev.data >= 1:
             self.InputStdDev.errors.append('Standard Deviation should be at least 1ms')
             return False
@@ -48,8 +49,21 @@ class Bridge_Config_Form(FlaskForm):
             return False
         if self.InputDelayCorrelation.data is not None:
             if not self.InputDelayCorrelation.data > 0:
-                self.InputDelayCorrelation.errors.append('Correlation should be greater than 0%')
+                self.InputDelayCorrelation.errors.append('Delay Correlation should be greater than 0%')
                 return False
+        if self.InputPktLossCorrelation.data is not None:
+            if not self.InputPktLossCorrelation.data > 0:
+                self.InputPktLossCorrelation.errors.append('Loss Correlation should be greater than 0%')
+                return False
+        if self.InputBwLimit.data is None and self.InputBwBurst.data is not None:
+            self.InputBwBurst.errors.append("Can't specify burst without limit")
+            return False
+        if self.InputMeanDelay.data is None and self.InputStdDev.data is not None:
+            self.InputStdDev.errors.append("Can't specify std deviation without delay")
+            return False
+        if self.InputPktLoss.data is None and self.InputPktLossCorrelation.data is not None:
+            self.InputStdDev.errors.append("Can't specify loss correlation without packet loss")
+            return False
         return True
 
 
@@ -134,17 +148,25 @@ def config_br(br):
                 sub.call(
                     'sudo tc qdisc add dev ' + iface + ' root handle 1:0 tbf rate ' + InputBwLimit + 'kbit buffer ' +
                     InputBwBurst + ' latency 2000',shell=True)
-                if InputMeanDelay and InputPktLoss and InputDelayCorrelation:
+                if InputMeanDelay and InputPktLoss and InputDelayCorrelation and InputPktLossCorrelation:
                     sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
                          '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
-                elif InputMeanDelay and InputPktLoss and not InputDelayCorrelation:
+                elif InputMeanDelay and InputPktLoss and InputDelayCorrelation and not InputPktLossCorrelation:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
+                         shell=True)
+                elif InputMeanDelay and InputPktLoss and not InputDelayCorrelation and InputPktLossCorrelation:
                     sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
                          '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
-                elif not InputMeanDelay and InputPktLoss:
+                elif InputMeanDelay and InputPktLoss and not InputDelayCorrelation and not InputPktLossCorrelation:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + 'distribution ' + InputDelayDistribution,
+                         shell=True)
+                elif not InputMeanDelay and InputPktLoss and InputPktLossCorrelation:
                     sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
                         '%',shell=True)
+                elif not InputMeanDelay and InputPktLoss and not InputPktLossCorrelation:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% ',shell=True)
                 elif InputMeanDelay and InputDelayCorrelation and not InputPktLoss:
                     sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem delay ' + InputMeanDelay + 'ms ' + InputStdDev +
                              'ms ' + InputDelayCorrelation  + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
@@ -153,17 +175,25 @@ def config_br(br):
                              'ms ' + 'distribution ' + InputDelayDistribution, shell=True)
                 return redirect('/config')
             else:
-                if InputMeanDelay and InputPktLoss and InputDelayCorrelation:
+                if InputMeanDelay and InputPktLoss and InputDelayCorrelation and InputPktLossCorrelation:
                     sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
                          '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
-                elif InputMeanDelay and InputPktLoss and not InputDelayCorrelation:
+                elif InputMeanDelay and InputPktLoss and InputDelayCorrelation and not InputPktLossCorrelation:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
+                         shell=True)
+                elif InputMeanDelay and InputPktLoss and not InputDelayCorrelation and InputPktLossCorrelation:
                     sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
                          '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
-                elif not InputMeanDelay and InputPktLoss:
+                elif InputMeanDelay and InputPktLoss and not InputDelayCorrelation and not InputPktLossCorrelation:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + 'distribution ' + InputDelayDistribution,
+                         shell=True)
+                elif not InputMeanDelay and InputPktLoss and InputPktLossCorrelation:
                     sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
                         '%',shell=True)
+                elif not InputMeanDelay and InputPktLoss and not InputPktLossCorrelation:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ',shell=True)
                 elif InputMeanDelay and InputDelayCorrelation and not InputPktLoss:
                     sub.call('sudo tc qdisc add dev ' + iface + ' root netem delay ' + InputMeanDelay + 'ms ' + InputStdDev +
                              'ms ' + InputDelayCorrelation  + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
