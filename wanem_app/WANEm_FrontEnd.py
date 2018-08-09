@@ -15,11 +15,6 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
 
-def delay_check(form, field):
-    if field.data <= 0:
-        raise ValidationError('If delay is specified should be greater than 0ms')
-
-
 class Bridge_Config_Form(FlaskForm):
     InputBwLimit = IntegerField('Bandwidth Rate (kbps)', validators=[Optional()])
     InputBwBurst = IntegerField('Bandwidth Burst (bytes)', validators=[Optional()])
@@ -34,21 +29,27 @@ class Bridge_Config_Form(FlaskForm):
     def validate(self):
         if not super(Bridge_Config_Form, self).validate():
             return False
-        if self.InputBwLimit.data <= 0:
-            self.InputBwLimit.errors.append('Rate limit should be greater than 0ms')
-            return False
-        if self.InputBwLimit.data and not self.InputBwBurst.data:
+
+        if self.InputBwLimit.data is not None:
+            if not self.InputBwLimit.data > 0:
+                self.InputBwLimit.errors.append('Rate limit should be greater than 0 kbps')
+                return False
+        if self.InputBwLimit.data is not None and self.InputBwBurst.data is None:
             self.InputBwBurst.errors.append('Burst Should be specified')
             return False
-        if self.InputMeanDelay.data <= 0:
-            self.InputMeanDelay.errors.append('Delay should be greater than 0ms')
+        if not self.InputMeanDelay.data > 0:
+            self.InputMeanDelay.errors.append('Delay should be greater than 0 ms')
             return False
-        if self.InputMeanDelay.data and not self.InputStdDev.data >= 1:
+        if self.InputMeanDelay.data is not None and not self.InputStdDev.data >= 1:
             self.InputStdDev.errors.append('Standard Deviation should be at least 1ms')
             return False
         if self.InputStdDev.data > self.InputMeanDelay.data:
             self.InputStdDev.errors.append('Standard Deviation should be less than the delay')
             return False
+        if self.InputDelayCorrelation.data is not None:
+            if not self.InputDelayCorrelation.data > 0:
+                self.InputDelayCorrelation.errors.append('Correlation should be greater than 0%')
+                return False
         return True
 
 
@@ -130,32 +131,45 @@ def config_br(br):
         if form.validate_on_submit():
             sub.call('sudo tc qdisc del dev ' + iface + ' root', shell=True)
             if InputBwLimit:
-                print 'sudo tc qdisc add dev ' + iface + ' root handle 1:0 tbf rate ' + InputBwLimit + 'kbit buffer ' + InputBwBurst + ' latency 2000'
                 sub.call(
                     'sudo tc qdisc add dev ' + iface + ' root handle 1:0 tbf rate ' + InputBwLimit + 'kbit buffer ' +
                     InputBwBurst + ' latency 2000',shell=True)
-                if InputMeanDelay and InputPktLoss:
+                if InputMeanDelay and InputPktLoss and InputDelayCorrelation:
                     sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
                          '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
+                         shell=True)
+                elif InputMeanDelay and InputPktLoss and not InputDelayCorrelation:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
+                         '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
                 elif not InputMeanDelay and InputPktLoss:
                     sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
                         '%',shell=True)
-                elif InputMeanDelay and not InputPktLoss:
+                elif InputMeanDelay and InputDelayCorrelation and not InputPktLoss:
                     sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem delay ' + InputMeanDelay + 'ms ' + InputStdDev +
-                             'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
+                             'ms ' + InputDelayCorrelation  + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
+                elif InputMeanDelay and not InputDelayCorrelation and not InputPktLoss:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' parent 1:0 netem delay ' + InputMeanDelay + 'ms ' + InputStdDev +
+                             'ms ' + 'distribution ' + InputDelayDistribution, shell=True)
                 return redirect('/config')
             else:
-                if InputMeanDelay and InputPktLoss:
+                if InputMeanDelay and InputPktLoss and InputDelayCorrelation:
                     sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
                          '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
+                         shell=True)
+                elif InputMeanDelay and InputPktLoss and not InputDelayCorrelation:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
+                         '% delay ' + InputMeanDelay + 'ms ' + InputStdDev + 'ms ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
                 elif not InputMeanDelay and InputPktLoss:
                     sub.call('sudo tc qdisc add dev ' + iface + ' root netem loss ' + InputPktLoss + '% ' + InputPktLossCorrelation +
                         '%',shell=True)
-                elif InputMeanDelay and not InputPktLoss:
+                elif InputMeanDelay and InputDelayCorrelation and not InputPktLoss:
                     sub.call('sudo tc qdisc add dev ' + iface + ' root netem delay ' + InputMeanDelay + 'ms ' + InputStdDev +
-                             'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
+                             'ms ' + InputDelayCorrelation  + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
+                elif InputMeanDelay and not InputDelayCorrelation and not InputPktLoss:
+                    sub.call('sudo tc qdisc add dev ' + iface + ' root netem delay ' + InputMeanDelay + 'ms ' + InputStdDev +
+                             'ms ' + 'distribution ' + InputDelayDistribution, shell=True)
                 return redirect('/config')
 
     active = {"status": "", "config": "bg-success", "title": "Config " + br}

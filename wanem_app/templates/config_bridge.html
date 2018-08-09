@@ -10,10 +10,16 @@
                 </div>
                 <div class="col-xs-4 form-group">
                     <label for="InputBwLimit">{{ form.InputBwLimit.label }}</label>
+                    {% for e in form.InputBwLimit.errors %}
+                        <span class="label label-danger">{{ e }}</span>
+                    {% endfor %}
                     <input type="{{ form.InputBwLimit.type }}" class="form-control" id="InputBwLimit" name="InputBwLimit" placeholder="Bandwidth Rate">
                 </div>
                 <div class="col-xs-4 form-group">
                     <label for="InputBwBurst">{{ form.InputBwBurst.label }}</label>
+                    {% for e in form.InputBwBurst.errors %}
+                        <span class="label label-danger">{{ e }}</span>
+                    {% endfor %}
                     <input type="{{ form.InputBwBurst.type }}" class="form-control" id="InputBwBurst" name="InputBwBurst" placeholder="Bandwidth Burst">
                 </div>
                 <div class="col-xs-12">
