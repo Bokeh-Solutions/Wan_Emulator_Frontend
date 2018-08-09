@@ -16,30 +16,40 @@ app.secret_key = os.urandom(24)
 
 
 def delay_check(form, field):
-    if field.data >= 1:
+    if field.data <= 0:
         raise ValidationError('If delay is specified should be greater than 0ms')
 
-
-def jitter_check(delay):
-    message = 'The jitter should be at least 1ms!'
-
-    def _jitter_check(form, field):
-        if delay.data >= 0 :
-            if not (field.data >= 1):
-                raise ValidationError(message)
-
-    return _jitter_check
 
 class Bridge_Config_Form(FlaskForm):
     InputBwLimit = IntegerField('Bandwidth Rate (kbps)', validators=[Optional()])
     InputBwBurst = IntegerField('Bandwidth Burst (bytes)', validators=[Optional()])
-    InputMeanDelay = IntegerField('Mean Delay (ms)', validators=[Optional(), delay_check])
-    InputStdDev = IntegerField('Standard Deviation (ms)', validators=[Optional(), jitter_check(InputMeanDelay)])
-    InputDelayCorrelation = IntegerField('Delay Correlation (%)', validators=[InputRequired()])
+    InputMeanDelay = IntegerField('Mean Delay (ms)', validators=[Optional()])
+    InputStdDev = IntegerField('Standard Deviation (ms)', validators=[Optional()])
+    InputDelayCorrelation = IntegerField('Delay Correlation (%)', validators=[Optional()])
     InputDelayDistribution = SelectField('Delay Distribution', choices=[('normal', 'Normal'),('pareto', 'Pareto'),('paretonormal', 'Pareto Normal')],
                                          default='Normal')
-    InputPktLoss = DecimalField('Packet Loss (%)', validators=[InputRequired()])
-    InputPktLossCorrelation = IntegerField('Packet Loss Correlation (%)', validators=[InputRequired()])
+    InputPktLoss = DecimalField('Packet Loss (%)', validators=[Optional()])
+    InputPktLossCorrelation = IntegerField('Packet Loss Correlation (%)', validators=[Optional()])
+
+    def validate(self):
+        if not super(Bridge_Config_Form, self).validate():
+            return False
+        if self.InputBwLimit.data <= 0:
+            self.InputBwLimit.errors.append('Rate limit should be greater than 0ms')
+            return False
+        if self.InputBwLimit.data and not self.InputBwBurst.data:
+            self.InputBwBurst.errors.append('Burst Should be specified')
+            return False
+        if self.InputMeanDelay.data <= 0:
+            self.InputMeanDelay.errors.append('Delay should be greater than 0ms')
+            return False
+        if self.InputMeanDelay.data and not self.InputStdDev.data >= 1:
+            self.InputStdDev.errors.append('Standard Deviation should be at least 1ms')
+            return False
+        if self.InputStdDev.data > self.InputMeanDelay.data:
+            self.InputStdDev.errors.append('Standard Deviation should be less than the delay')
+            return False
+        return True
 
 
 def get_tc_status():
@@ -119,7 +129,7 @@ def config_br(br):
         InputPktLossCorrelation = request.form['InputPktLossCorrelation']
         if form.validate_on_submit():
             sub.call('sudo tc qdisc del dev ' + iface + ' root', shell=True)
-            if InputBwLimit and InputBwBurst:
+            if InputBwLimit:
                 print 'sudo tc qdisc add dev ' + iface + ' root handle 1:0 tbf rate ' + InputBwLimit + 'kbit buffer ' + InputBwBurst + ' latency 2000'
                 sub.call(
                     'sudo tc qdisc add dev ' + iface + ' root handle 1:0 tbf rate ' + InputBwLimit + 'kbit buffer ' +
