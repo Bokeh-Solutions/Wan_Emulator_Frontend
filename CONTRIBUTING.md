@@ -24,10 +24,9 @@ If a maintainer asks you to "rebase" your PR, they're saying that a lot of code 
 
 ## Getting Started
 
-1. Ensure cross-platform compatibility for every change that's accepted. Windows, Mac, Debian & Ubuntu Linux, 
-   whenever's possible.
-2. Ensure any install or build dependencies are removed before the end of the layer when doing a 
-   build.
+1. Open a Pull Request to fix/implement an Issue, or you can also fork the project and then send a pull request
+2. Ensure cross-platform compatibility for every change proposed. Windows, Mac, Debian & Ubuntu Linux, whenever's possible.
+3. Ensure that no personal info, data or passwords were left on the 
 3. Create issues for any major changes and enhancements that you wish to make. Discuss things transparently 
    and get community feedback.
 4. Keep feature versions as small as possible, preferably one new feature per version.
@@ -35,8 +34,9 @@ If a maintainer asks you to "rebase" your PR, they're saying that a lot of code 
 6. Update the README.md with details of the changes made, this includes but not limited to: new environment 
    variables, exposed ports, useful file locations and container parameters.
 7. Update also the documentation in docs, we use Sphinx to generate the Docs
-3. Increase the version numbers in any examples files, README.md and docs files to the new version that this
+8. Increase the version numbers in any examples files, README.md and docs files to the new version that this
    Pull Request would represent.
+9. Wait for one of the developers to merge your code. Be Patient!
 
 ## How to file a bug report
 
