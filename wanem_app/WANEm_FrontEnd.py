@@ -6,7 +6,7 @@ from flask import request
 from flask import redirect
 from flask_wtf import FlaskForm
 from wtforms import IntegerField, DecimalField, SelectField
-from wtforms.validators import InputRequired, Optional, ValidationError
+from wtforms.validators import Optional
 import subprocess as sub
 import re
 import os
@@ -16,6 +16,11 @@ app.secret_key = os.urandom(24)
 
 
 class Bridge_Config_Form(FlaskForm):
+    '''
+    Flask WTF form to configure the individual bridge interfaces with the TC variables to be used
+    '''
+
+    #Definition of the different fields
     InputBwLimit = IntegerField('Bandwidth Rate (kbps)', validators=[Optional()])
     InputBwBurst = IntegerField('Bandwidth Burst (bytes)', validators=[Optional()])
     InputMeanDelay = IntegerField('Mean Delay (ms)', validators=[Optional()])
@@ -27,9 +32,11 @@ class Bridge_Config_Form(FlaskForm):
     InputPktLossCorrelation = IntegerField('Packet Loss Correlation (%)', validators=[Optional()])
 
     def validate(self):
+        # Load the default class validators
         if not super(Bridge_Config_Form, self).validate():
             return False
 
+        # Custom Validations
         if self.InputBwLimit.data is not None:
             if not self.InputBwLimit.data > 0:
                 self.InputBwLimit.errors.append('Rate limit should be greater than 0 kbps')
@@ -69,8 +76,8 @@ class Bridge_Config_Form(FlaskForm):
 
 def get_tc_status():
     """
-    Fucntion to return the TC status
-    :return: List with all the lines of the output of the command
+    Function to return the TC status
+    :return: List with all the lines of the command output
     """
     output = sub.check_output(['tc', 'qdisc']).split('\n')
     return output
@@ -78,7 +85,7 @@ def get_tc_status():
 
 def get_bridges():
     """
-    Function to return the bridges and associations
+    Function to return the bridges and member associations
     :return: Dictionary with the following format: {'<#>':{'name':<br_name>, 'interface_in':<if_in>, 'interface_out':<if_out>}, ...}
     """
     br_list={}
@@ -130,6 +137,12 @@ def get_interfaces():
 
 @app.route('/config_br/<br>', methods=['GET', 'POST'])
 def config_br(br):
+    '''
+    Function to configure the individual bridges, here you can set the different variables like Bw, rtt, etc...
+    :param br: The bridge number to configure
+    :return: The template render for config_brodge.html if the request type is GET, if the request type is POST then
+     the bridge configuration form is processed and the function returns to the /config url
+    '''
     bridges = get_bridges()
     iface_in = bridges[int(br[-1])]['interface_in']
     iface_out = bridges[int(br[-1])]['interface_out']
@@ -153,7 +166,7 @@ def config_br(br):
                 sub.call(
                     'sudo tc qdisc add dev ' + iface_out + ' root handle 1:0 tbf rate ' + InputBwLimit + 'kbit buffer ' +
                     InputBwBurst + ' latency 2000', shell=True)
-                if InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation <> '' and InputPktLossCorrelation <> '':
+                if InputMeanDelay != '' and InputPktLoss != '' and InputDelayCorrelation != '' and InputPktLossCorrelation != '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
                          '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
@@ -161,13 +174,13 @@ def config_br(br):
                         'sudo tc qdisc add dev ' + iface_out + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
                         '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
                         shell=True)
-                elif InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation <> '' and InputPktLossCorrelation == '':
+                elif InputMeanDelay != '' and InputPktLoss != '' and InputDelayCorrelation != '' and InputPktLossCorrelation == '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
                     sub.call(
                         'sudo tc qdisc add dev ' + iface_out + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
                         shell=True)
-                elif InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation == '' and InputPktLossCorrelation <> '':
+                elif InputMeanDelay != '' and InputPktLoss != '' and InputDelayCorrelation == '' and InputPktLossCorrelation != '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
                          '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
@@ -175,29 +188,29 @@ def config_br(br):
                         'sudo tc qdisc add dev ' + iface_out + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
                         '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + 'distribution ' + InputDelayDistribution,
                         shell=True)
-                elif InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation == '' and InputPktLossCorrelation == '':
+                elif InputMeanDelay != '' and InputPktLoss != '' and InputDelayCorrelation == '' and InputPktLossCorrelation == '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
                     sub.call(
                         'sudo tc qdisc add dev ' + iface_out + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + 'distribution ' + InputDelayDistribution,
                         shell=True)
-                elif InputMeanDelay == '' and InputPktLoss <> '' and InputPktLossCorrelation <> '':
+                elif InputMeanDelay == '' and InputPktLoss != '' and InputPktLossCorrelation != '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
                         '%',shell=True)
                     sub.call(
                         'sudo tc qdisc add dev ' + iface_out + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
                         '%', shell=True)
-                elif InputMeanDelay == '' and InputPktLoss <> '' and InputPktLossCorrelation == '':
+                elif InputMeanDelay == '' and InputPktLoss != '' and InputPktLossCorrelation == '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ',shell=True)
                     sub.call('sudo tc qdisc add dev ' + iface_out + ' parent 1:0 netem loss ' + str(int(InputPktLoss)/2) + '% ',
                              shell=True)
-                elif InputMeanDelay <> '' and InputDelayCorrelation <> '' and InputPktLoss == '':
+                elif InputMeanDelay != '' and InputDelayCorrelation != '' and InputPktLoss == '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) +
                              'ms ' + InputDelayCorrelation  + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
                     sub.call(
                         'sudo tc qdisc add dev ' + iface_out + ' parent 1:0 netem delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) +
                         'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
-                elif InputMeanDelay <> '' and InputDelayCorrelation == '' and InputPktLoss == '':
+                elif InputMeanDelay != '' and InputDelayCorrelation == '' and InputPktLoss == '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' parent 1:0 netem delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) +
                              'ms ' + 'distribution ' + InputDelayDistribution, shell=True)
                     sub.call(
@@ -205,7 +218,7 @@ def config_br(br):
                         'ms ' + 'distribution ' + InputDelayDistribution, shell=True)
                 return redirect('/config')
             else:
-                if InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation <> '' and InputPktLossCorrelation <> '':
+                if InputMeanDelay != '' and InputPktLoss != '' and InputDelayCorrelation != '' and InputPktLossCorrelation != '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
                          '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
@@ -213,13 +226,13 @@ def config_br(br):
                         'sudo tc qdisc add dev ' + iface_out + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
                         '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
                         shell=True)
-                elif InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation <> '' and InputPktLossCorrelation == '':
+                elif InputMeanDelay != '' and InputPktLoss != '' and InputDelayCorrelation != '' and InputPktLossCorrelation == '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
                     sub.call(
                         'sudo tc qdisc add dev ' + iface_out + ' root netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution,
                         shell=True)
-                elif InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation == '' and InputPktLossCorrelation <> '':
+                elif InputMeanDelay != '' and InputPktLoss != '' and InputDelayCorrelation == '' and InputPktLossCorrelation != '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
                          '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
@@ -227,29 +240,29 @@ def config_br(br):
                         'sudo tc qdisc add dev ' + iface_out + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
                         '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) + 'ms ' + 'distribution ' + InputDelayDistribution,
                         shell=True)
-                elif InputMeanDelay <> '' and InputPktLoss <> '' and InputDelayCorrelation == '' and InputPktLossCorrelation == '':
+                elif InputMeanDelay != '' and InputPktLoss != '' and InputDelayCorrelation == '' and InputPktLossCorrelation == '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + InputStdDev + 'ms ' + 'distribution ' + InputDelayDistribution,
                          shell=True)
                     sub.call(
                         'sudo tc qdisc add dev ' + iface_out + ' root netem loss ' + str(int(InputPktLoss)/2) + '% delay ' + str(int(InputMeanDelay)/2) + 'ms ' + InputStdDev + 'ms ' + 'distribution ' + InputDelayDistribution,
                         shell=True)
-                elif InputMeanDelay == '' and InputPktLoss <> '' and InputPktLossCorrelation <> '':
+                elif InputMeanDelay == '' and InputPktLoss != '' and InputPktLossCorrelation != '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
                         '%',shell=True)
                     sub.call(
                         'sudo tc qdisc add dev ' + iface_out + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ' + InputPktLossCorrelation +
                         '%', shell=True)
-                elif InputMeanDelay == '' and InputPktLoss <> '' and InputPktLossCorrelation == '':
+                elif InputMeanDelay == '' and InputPktLoss != '' and InputPktLossCorrelation == '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ',shell=True)
                     sub.call('sudo tc qdisc add dev ' + iface_out + ' root netem loss ' + str(int(InputPktLoss)/2) + '% ',
                              shell=True)
-                elif InputMeanDelay <> '' and InputDelayCorrelation <> '' and InputPktLoss == '':
+                elif InputMeanDelay != '' and InputDelayCorrelation != '' and InputPktLoss == '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) +
                              'ms ' + InputDelayCorrelation  + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
                     sub.call(
                         'sudo tc qdisc add dev ' + iface_in + ' root netem delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) +
                         'ms ' + InputDelayCorrelation + '% ' + 'distribution ' + InputDelayDistribution, shell=True)
-                elif InputMeanDelay <> '' and InputDelayCorrelation == '' and InputPktLoss == '':
+                elif InputMeanDelay != '' and InputDelayCorrelation == '' and InputPktLoss == '':
                     sub.call('sudo tc qdisc add dev ' + iface_in + ' root netem delay ' + str(int(InputMeanDelay)/2) + 'ms ' + str(int(InputStdDev)/2) +
                              'ms ' + 'distribution ' + InputDelayDistribution, shell=True)
                     sub.call(
@@ -263,6 +276,10 @@ def config_br(br):
 
 @app.route('/config')
 def config():
+    '''
+    Function to process request to the /config url, in this url you will see a list of all the bridges that can be configured
+    :return:  The template render for config.html
+    '''
     bridges = get_bridges()
     active = {"status": "", "config": "bg-success", "title":"Config"}
     return render_template('config.html', active=active, bridges=bridges)
@@ -270,6 +287,10 @@ def config():
 
 @app.route('/')
 def status():
+    '''
+    Function to process requests to the root url, in this url you will find the status on how the system is configured
+    :return: The template render for status.html
+    '''
     interfaces = get_interfaces()
     bridges = get_bridges()
     tc_status = get_tc_status()
