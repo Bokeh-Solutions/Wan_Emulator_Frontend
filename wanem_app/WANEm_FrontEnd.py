@@ -140,8 +140,7 @@ def config_br(br):
     '''
     Function to configure the individual bridges, here you can set the different variables like Bw, rtt, etc...
     :param br: The bridge number to configure
-    :return: The template render for config_brodge.html if the request type is GET, if the request type is POST then
-     the bridge configuration form is processed and the function returns to the /config url
+    :return: The template render for config_brodge.html if the request type is GET, if the request type is POST then the bridge configuration form is processed and the function returns to the /config url
     '''
     bridges = get_bridges()
     iface_in = bridges[int(br[-1])]['interface_in']
