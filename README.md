@@ -14,7 +14,7 @@ Follow this steps to install it:
 + Clone the github project with:
   ```
   cd
-  sudo git clone http://github.com/mercolino/wan_emulator_frontend
+  sudo git clone https://github.com/Bokeh-Solutions/Wan_Emulator_Frontend
   cd wan_emulator_frontend
   ```
 + Allow the installation script to execute
