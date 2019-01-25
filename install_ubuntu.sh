@@ -106,25 +106,48 @@ echo "***** Permissions to the Installation directory changed !!!*****"
 
 #Create service for automatic bootup
 echo "***** Creating system service for the application *****"
-cat > /etc/systemd/system/wanem.service << EOF
-[Unit]
-Description=Gunicorn instance to serve the Wan Emulator FrontEnd
-After=network.target
+if [ $VERSION = 18 ]
+then
+    cat > /etc/systemd/system/wanem.service << EOF
+    [Unit]
+    Description=Gunicorn instance to serve the Wan Emulator FrontEnd
+    After=network.target
 
-[Service]
-PIDFile=/run/gunicorn/pid
-User=wanem_user
-Group=www-data
-RuntimeDirectory=gunicorn
-WorkingDirectory=$INSTALL_DIR
-ExecStart=/usr/bin/gunicorn --pid /run/gunicorn/pid --bind unix:wanem.sock wsgi:application
-ExecReload=/bin/kill -s HUP $MAINPID
-ExecStop=/bin/kill -s TERM $MAINPID
-PrivateTmp=true
+    [Service]
+    PIDFile=/run/gunicorn3/pid
+    User=wanem_user
+    Group=www-data
+    RuntimeDirectory=gunicorn3
+    WorkingDirectory=$INSTALL_DIR
+    ExecStart=/usr/bin/gunicorn3 --pid /run/gunicorn3/pid --bind unix:wanem.sock wsgi:application
+    ExecReload=/bin/kill -s HUP $MAINPID
+    ExecStop=/bin/kill -s TERM $MAINPID
+    PrivateTmp=true
 
-[Install]
-WantedBy=multi-user.target
-EOF
+    [Install]
+    WantedBy=multi-user.target
+    EOF
+else
+    cat > /etc/systemd/system/wanem.service << EOF
+    [Unit]
+    Description=Gunicorn instance to serve the Wan Emulator FrontEnd
+    After=network.target
+
+    [Service]
+    PIDFile=/run/gunicorn/pid
+    User=wanem_user
+    Group=www-data
+    RuntimeDirectory=gunicorn
+    WorkingDirectory=$INSTALL_DIR
+    ExecStart=/usr/bin/gunicorn --pid /run/gunicorn/pid --bind unix:wanem.sock wsgi:application
+    ExecReload=/bin/kill -s HUP $MAINPID
+    ExecStop=/bin/kill -s TERM $MAINPID
+    PrivateTmp=true
+
+    [Install]
+    WantedBy=multi-user.target
+    EOF
+fi
 
 systemctl start wanem
 systemctl enable wanem
