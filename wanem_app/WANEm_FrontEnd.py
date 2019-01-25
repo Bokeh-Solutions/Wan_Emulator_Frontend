@@ -79,7 +79,7 @@ def get_tc_status():
     Function to return the TC status
     :return: List with all the lines of the command output
     """
-    output = sub.check_output(['tc', 'qdisc']).split('\n')
+    output = sub.check_output(['tc', 'qdisc']).decode().split('\n')
     return output
 
 
@@ -91,7 +91,7 @@ def get_bridges():
     br_list={}
     i = 0
     # Grab the output from the command "brctl show", and split it in lines
-    output = sub.check_output(['brctl', 'show']).split('\n')
+    output = sub.check_output(['brctl', 'show']).decode().split('\n')
     for c in range(0,len(output)):
         regex1 = re.search('(br[0-9]+).*(en.+)', output[c])
         if regex1:
@@ -112,7 +112,7 @@ def get_interfaces():
     if_list = {}
     if_group = {}
     # Grab the output from the command "ip address", and split it in lines
-    output = sub.check_output(['ip', 'address']).split('\n')
+    output = sub.check_output(['ip', 'address']).decode().split('\n')
     # Process each line to find the number, name and status, create also a dictionary with the rest of the info to extract ip address
     for line in output:
         regex = re.search('([0-9]*):\s*(.*):\s*<.*>\s*mtu.*state\s*([A-Za-z]+)\s*group', line)
