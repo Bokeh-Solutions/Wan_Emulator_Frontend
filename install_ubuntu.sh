@@ -41,7 +41,7 @@ apt-get -y dist-upgrade
 # Install git and python-pip
 if [ $VERSION = 18 ]
 then
-        apt-get -y install python3-pip python3-virtualenv bridge-utils nginx gunicorn ifupdown
+        apt-get -y install python3-pip python3-virtualenv bridge-utils nginx gunicorn3 ifupdown
 else
         apt-get -y install python-pip python-virtualenv bridge-utils nginx gunicorn
 fi
@@ -145,6 +145,7 @@ server {
 EOF
 
 rm -fr /etc/nginx/sites-available/default
+rm -fr /etc/nginx/sites-enabled/default
 ln -s /etc/nginx/sites-available/wanem /etc/nginx/sites-enabled
 systemctl restart nginx
 echo "***** NGINX Configured*****"
