@@ -4,6 +4,7 @@ from flask import Flask
 from flask import render_template
 from flask import request
 from flask import redirect
+from flask import url_for
 from flask_wtf import FlaskForm
 from wtforms import IntegerField, DecimalField, SelectField
 from wtforms.validators import Optional
@@ -51,9 +52,10 @@ class Bridge_Config_Form(FlaskForm):
         if self.InputMeanDelay.data is not None and not self.InputStdDev.data >= 1:
             self.InputStdDev.errors.append('Standard Deviation should be at least 1ms')
             return False
-        if self.InputStdDev.data > self.InputMeanDelay.data:
-            self.InputStdDev.errors.append('Standard Deviation should be less than the delay')
-            return False
+        if self.InputStdDev.data is not None and self.InputMeanDelay.data is not None:
+            if self.InputStdDev.data > self.InputMeanDelay.data:
+                self.InputStdDev.errors.append('Standard Deviation should be less than the delay')
+                return False
         if self.InputDelayCorrelation.data is not None:
             if not self.InputDelayCorrelation.data > 0:
                 self.InputDelayCorrelation.errors.append('Delay Correlation should be greater than 0%')
@@ -282,6 +284,19 @@ def config():
     bridges = get_bridges()
     active = {"status": "", "config": "bg-success", "title":"Config"}
     return render_template('config.html', active=active, bridges=bridges)
+
+
+@app.route('/reset')
+def reset():
+    '''
+    Function to reset and clear tc configurations from the interfaces
+    :return:  redirect to status main.html
+    '''
+    bridges = get_bridges()
+    for br in bridges:
+        sub.call('sudo tc qdisc del dev ' + bridges[br]['interface_in'] + ' root', shell=True)
+        sub.call('sudo tc qdisc del dev ' + bridges[br]['interface_out'] + ' root', shell=True)
+    return redirect(url_for('status'))
 
 
 @app.route('/')
