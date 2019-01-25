@@ -25,12 +25,26 @@ BR5_NAME='br4'
 BR5_IF_IN='enp0s8'
 BR5_IF_OUT='enp0s9'
 
+# Getting the Ubuntu Version
+VERSION=`lsb_release --release | awk '{print $2}' | awk -F '.' '{print $1}'`
+
+# Updating sources if Version 18
+if [ $VERSION = 18 ]
+then
+    sed -e 's/$/ universe/' -i /etc/apt/sources.list
+fi
+
 # Update repositories and upgrade system
 apt-get update
 apt-get -y dist-upgrade
 
 # Install git and python-pip
-apt-get -y install python-pip python-virtualenv bridge-utils nginx gunicorn
+if [ $VERSION = 18 ]
+then
+        apt-get -y install python3-pip python3-virtualenv bridge-utils nginx gunicorn ifupdown
+else
+        apt-get -y install python-pip python-virtualenv bridge-utils nginx gunicorn
+fi
 
 # Creating Bridge Interfaces
 echo '***** Creating Bridge Interfaces *****'
@@ -66,9 +80,14 @@ rm -fr $INSTALL_DIR/install_ubuntu.sh
 echo "***** Installation directory Created!!! *****"
 
 # Create virtual environment
-echo "***** Installing gunicorn and flask *****"
-pip install flask Flask-WTF
-echo "***** Gunicorn and Flask Installed!!!! *****"
+echo "***** Installing python dependencies *****"
+if [ $VERSION = 18 ]
+then
+        pip3 install flask Flask-WTF
+else
+        pip install flask Flask-WTF
+fi
+echo "***** Python Dependencies Installed!!!! *****"
 
 # Creating User
 echo "***** Creating wanem_user *****"
@@ -125,9 +144,9 @@ server {
 }
 EOF
 
-sudo rm -fr /etc/nginx/sites-available/default
-sudo ln -s /etc/nginx/sites-available/wanem /etc/nginx/sites-enabled
-sudo systemctl restart nginx
+rm -fr /etc/nginx/sites-available/default
+ln -s /etc/nginx/sites-available/wanem /etc/nginx/sites-enabled
+systemctl restart nginx
 echo "***** NGINX Configured*****"
 
 # Restart Networking
