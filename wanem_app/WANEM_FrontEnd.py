@@ -49,10 +49,13 @@ class Bridge_Config_Form(FlaskForm):
             if not self.InputMeanDelay.data > 0:
                 self.InputMeanDelay.errors.append('Delay should be greater than 0 ms')
                 return False
-        if self.InputMeanDelay.data is not None and not self.InputStdDev.data >= 1:
-            self.InputStdDev.errors.append('Standard Deviation should be at least 1ms')
+        if self.InputMeanDelay.data is not None and self.InputStdDev.data is None:
+            self.InputStdDev.errors.append('Standard Deviation should be specified')
             return False
         if self.InputStdDev.data is not None and self.InputMeanDelay.data is not None:
+            if not self.InputStdDev.data >= 1:
+                self.InputStdDev.errors.append('Standard Deviation should be at least 1ms')
+                return False
             if self.InputStdDev.data > self.InputMeanDelay.data:
                 self.InputStdDev.errors.append('Standard Deviation should be less than the delay')
                 return False
