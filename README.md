@@ -1,12 +1,14 @@
 # WAN Emulator Frontend
 
-This script is a frontend to monitor and config a WAN Emulator made with the LINUX TC and netem to emulate conditions like Bandwidth, delay, packet loss in a link.
+This tool is a frontend to monitor and config a WAN Emulator made with the LINUX TC and netem to emulate conditions like Bandwidth, delay, packet loss in a link.
 
 The Frontend was developed in python using Flask and the subprocess library, the web application is presented with Gunicorn and NGINX
 
 The virtual machine where this should be installed should have 1 management interface and a minimum of 2 and a maximum of 10 interfaces that will create 1 to 5 bridge interfaces.
 
-This Front End was tested only on Ubuntu 16.04 LTS Server.
+This Front End was tested with:
+ - Ubuntu 16.04 LTS Server
+ - Ubuntu 18.04 LTS Server
 
 Follow this steps to install it:
 
@@ -44,5 +46,5 @@ Follow this steps to install it:
   ```
 + The Frontend application should be installed by default on `/opt/wan_frontend` unless the script was changed
 
-**_Note:_**: This script is provided as_is, no support comes with it and you are responsible to run it on your systems, if something breaks youa re the only one to blame...
+**_Note:_**: This tool is provided as_is, no support comes with it and you are responsible to run it on your systems, if something breaks you are the only one to blame...
 
